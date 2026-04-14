@@ -9,7 +9,7 @@ def utcnow():
 class Document(Base):
     __tablename__ = "documents"
 
-    id = Column(Integer, primary key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True)
     filename = Column(String(255), nullable=False)
     original_filename = Column(String(255), nullable=False)
     file_path = Column(String(500), nullable=False)
@@ -43,7 +43,7 @@ class Document(Base):
 class DocumentChunk(Base):
     __tablename__ = "document_chunks"
 
-    id = Column(Integer, primary key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True)
     document_id = Column(Integer, ForeignKey("documents.id"), nullable=False)
     chunk_index = Column(Integer, nullable=False)
     content = Column(Text, nullable=False)
@@ -67,7 +67,7 @@ class DocumentChunk(Base):
 class QueryLog(Base):
     __tablename__ = "query_logs"
 
-    id = Column(Integer, primary key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True)
     query_text = Column(Text, nullable=False)
     response_text = Column(Text, nullable=True)
     retrieved_chunk_ids = Column(Text, nullable=True)
