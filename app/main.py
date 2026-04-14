@@ -35,6 +35,8 @@ async def lifespan(app: FastAPI):
 
 settings = get_settings()
 
+# When deployed on Railway, the PORT env variable is injected automatically.
+# The start command in railway.json passes it to uvicorn via --port $PORT.
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
