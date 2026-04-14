@@ -16,12 +16,13 @@ except Exception:
 
 # Sanitize: strip whitespace and trailing slashes to prevent double-slash 404 errors
 API_BASE_URL = _base_url.strip().rstrip("/")
-REQUEST_TIMEOUT_SECONDS = 60
+HEALTH_TIMEOUT_SECONDS = 5
+REQUEST_TIMEOUT_SECONDS = 30
 UPLOAD_TIMEOUT_SECONDS = 300
 
 def get_health() -> dict:
     try:
-        response = requests.get(f"{API_BASE_URL}/health", timeout=REQUEST_TIMEOUT_SECONDS)
+        response = requests.get(f"{API_BASE_URL}/health", timeout=HEALTH_TIMEOUT_SECONDS)
         response.raise_for_status()
         return response.json()
     except Exception as e:
