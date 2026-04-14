@@ -19,6 +19,8 @@ faiss-cpu==1.9.0
 # Document parsing
 pypdf==5.1.0
 python-docx==1.1.2
+pdf2image>=1.17.0
+Pillow>=10.0.0
 
 # Numerical computing
 numpy>=1.26.4,<2.0

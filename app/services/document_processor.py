@@ -18,14 +18,32 @@ def extract_text_from_pdf(file_path: str) -> List[Tuple[str, int]]:
         reader = PdfReader(file_path)
         for i, page in enumerate(reader.pages):
             text = page.extract_text()
-            if text:
-                cleaned = clean_text(text)
-                if cleaned:
-                    pages.append((cleaned, i + 1))
-                else:
-                    logger.warning(f"Page {i + 1} of {file_path} yielded no text after cleaning.")
+            cleaned = clean_text(text) if text else ""
+            
+            if not cleaned or len(cleaned) < 50:
+                logger.info(f"Page {i + 1} of PDF at {file_path} seems scanned. Falling back to OCR.")
+                try:
+                    import pdf2image
+                    import io
+                    from app.services.gemini_service import extract_text_from_image
+                    
+                    images = pdf2image.convert_from_path(file_path, first_page=i+1, last_page=i+1)
+                    if images:
+                        img_byte_arr = io.BytesIO()
+                        images[0].save(img_byte_arr, format='JPEG')
+                        img_bytes = img_byte_arr.getvalue()
+                        
+                        ocr_text = extract_text_from_image(img_bytes, mime_type="image/jpeg", prompt="Extract all text from this document page accurately. Preserve structure.")
+                        cleaned = clean_text(ocr_text)
+                except ImportError:
+                    logger.warning(f"pdf2image is not available or poppler-utils is not installed. Skipping OCR fallback for page {i+1}.")
+                except Exception as e:
+                    logger.warning(f"OCR fallback failed for page {i+1} of {file_path}: {e}")
+            
+            if cleaned:
+                pages.append((cleaned, i + 1))
             else:
-                logger.warning(f"Page {i + 1} of {file_path} yielded no text.")
+                logger.warning(f"Page {i + 1} of {file_path} yielded no text even after OCR fallback.")
     except Exception as e:
         logger.error(f"Error extracting text from PDF {file_path}: {e}")
         raise
@@ -78,6 +96,30 @@ def extract_text_from_txt(file_path: str) -> List[Tuple[str, int]]:
         raise
     return pages
 
+def extract_text_from_image_file(file_path: str) -> List[Tuple[str, int]]:
+    pages = []
+    try:
+        import mimetypes
+        from app.services.gemini_service import extract_text_from_image
+        
+        mime_type, _ = mimetypes.guess_type(file_path)
+        if not mime_type:
+            mime_type = "image/jpeg"
+            
+        with open(file_path, "rb") as f:
+            image_bytes = f.read()
+            
+        ocr_text = extract_text_from_image(image_bytes, mime_type=mime_type, prompt="Extract all text from this image precisely. Preserve any natural structure, formatting or tables as text. Do not add any conversational filler, just return the text found in the image.")
+        cleaned = clean_text(ocr_text)
+        if cleaned:
+            pages.append((cleaned, 1))
+        else:
+            logger.warning(f"Image {file_path} yielded no text via OCR.")
+    except Exception as e:
+        logger.error(f"Error extracting text from Image {file_path}: {e}")
+        raise
+    return pages
+
 def extract_text(file_path: str, file_type: str) -> List[Tuple[str, int]]:
     file_type = file_type.lower()
     if file_type == 'pdf':
@@ -86,6 +128,8 @@ def extract_text(file_path: str, file_type: str) -> List[Tuple[str, int]]:
         return extract_text_from_docx(file_path)
     elif file_type in ('txt', 'md', 'rst'):
         return extract_text_from_txt(file_path)
+    elif file_type in ('jpg', 'jpeg', 'png'):
+        return extract_text_from_image_file(file_path)
     else:
         raise ValueError(f"Unsupported file type: {file_type}")
 

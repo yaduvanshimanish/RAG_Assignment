@@ -28,6 +28,7 @@ Client -> FastAPI -> Services
 - Docker
 - Docker Compose
 - Gemini API key. Get a free key at https://aistudio.google.com/app/apikey
+- `poppler-utils` (Optional, required for OCR fallback on scanned PDFs)
 
 ## Local Setup (Python)
 
@@ -45,6 +46,7 @@ Client -> FastAPI -> Services
    ```bash
    pip install -r requirements.txt
    ```
+   *Note: If you want OCR support for scanned PDFs, make sure `poppler-utils` is installed on your system (`sudo apt-get install poppler-utils` on Ubuntu/Debian or `brew install poppler` on macOS).*
 4. Configure environment variables:
    ```bash
    cp .env.example .env
@@ -164,7 +166,7 @@ pytest tests/test_faiss_service.py -v
 
 ## Supported File Types
 
-PDF, DOCX, DOC, TXT, MD
+PDF, DOCX, DOC, TXT, MD, JPG, PNG
 
 ## Limitations
 

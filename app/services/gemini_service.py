@@ -122,3 +122,24 @@ Section 5: ANSWER:
         contents=prompt
     )
     return response.text.strip()
+
+
+def extract_text_from_image(image_bytes: bytes, mime_type: str, prompt: str = "Extract all text from this image precisely. Preserve any natural structure, formatting or tables as text. Do not add any conversational filler, just return the text found.") -> str:
+    """
+    Extract text from an image using Gemini's multi-modal capabilities.
+    """
+    client = _get_client()
+    settings = get_settings()
+
+    try:
+        response = client.models.generate_content(
+            model=settings.GEMINI_MODEL,
+            contents=[
+                types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
+                prompt
+            ]
+        )
+        return response.text.strip()
+    except Exception as e:
+        logger.error(f"Failed to extract text from image via Gemini: {e}")
+        raise

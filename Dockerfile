@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
     g++ \
     build-essential \
     libgomp1 \
+    poppler-utils \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
@@ -23,6 +24,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     libgomp1 \
     curl \
+    poppler-utils \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /install /usr/local
