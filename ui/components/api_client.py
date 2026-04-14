@@ -27,7 +27,7 @@ def get_health() -> dict:
 
 def upload_document(file_bytes: bytes, filename: str, content_type: str) -> dict:
     try:
-        files = {"file": (filename, file_bytes, content_type)}
+        files = [("files", (filename, file_bytes, content_type))]
         response = requests.post(
             f"{API_BASE_URL}/api/v1/documents/upload",
             files=files,
