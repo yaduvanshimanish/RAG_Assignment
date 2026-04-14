@@ -1,5 +1,6 @@
 # RAG Pipeline - Retrieval-Augmented Generation with FastAPI, Gemini Flash, and FAISS
 
+![CI](https://github.com/yaduvanshimanish/RAG_Assignment/actions/workflows/ci.yml/badge.svg)
 A production-ready Retrieval-Augmented Generation (RAG) pipeline REST API using FastAPI.
 
 ## Architecture Overview
@@ -178,3 +179,80 @@ PDF, DOCX, DOC, TXT, MD, JPG, PNG
 ## License
 
 MIT
+
+## Streamlit UI
+
+### Running the Streamlit UI locally
+
+Prerequisites: Backend must be running at http://localhost:8000
+
+```bash
+cd ui
+pip install -r requirements.txt
+API_BASE_URL=http://localhost:8000 streamlit run Home.py
+```
+
+Open http://localhost:8501 in your browser.
+
+Pages available:
+| Page               | URL path      | Description                              |
+|--------------------|---------------|------------------------------------------|
+| Home               | /             | Backend health status and navigation     |
+| Upload Documents   | /Upload       | Upload and process PDF, DOCX, TXT files  |
+| Ask Questions      | /Ask          | RAG query interface with chunk viewer    |
+| Document Library   | /Library      | Browse, inspect, and delete documents    |
+| Query History      | /History      | View past queries and AI answers         |
+
+## Running Full Stack with Docker Compose
+
+```bash
+cp .env.example .env
+# Set GEMINI_API_KEY in .env
+docker compose up --build -d
+```
+
+Services started:
+| Service     | URL                    | Description          |
+|-------------|------------------------|----------------------|
+| rag-api     | http://localhost:8000  | FastAPI backend      |
+| rag-ui      | http://localhost:8501  | Streamlit frontend   |
+
+## Global Deployment
+
+### Backend (Railway)
+
+1. Install Railway CLI and login:
+   ```bash
+   npm install -g @railway/cli
+   railway login
+   ```
+2. Initialize and deploy:
+   ```bash
+   railway init
+   railway up
+   ```
+3. Set environment variables in the Railway dashboard (Variables tab):
+   `GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_EMBEDDING_MODEL`, 
+   `FAISS_DIMENSION`, `FAISS_INDEX_PATH`, `UPLOAD_DIR`, `DATABASE_URL`, etc.
+4. Add a persistent Volume in Railway (mount at `/app/data`) to preserve uploaded documents and the FAISS index across redeploys.
+5. Get public URL: `railway domain`
+
+### Frontend (Streamlit Community Cloud)
+
+1. Go to https://share.streamlit.io
+2. Connect your GitHub account.
+3. New app -> Repository: your-username/rag-pipeline -> Main file: ui/Home.py
+4. In Advanced settings -> Secrets, add:
+   ```toml
+   API_BASE_URL = "https://your-railway-url.up.railway.app"
+   ```
+5. Click Deploy.
+
+Full deployment detail in `STREAMLIT_DEPLOY.md` and `.railway/DEPLOYMENT_NOTES.md`
+
+## CI/CD
+
+GitHub Actions runs on every push to main:
+- Backend unit tests (document processor, FAISS service)
+- Backend integration tests (documents API, query API)
+- UI import validation
