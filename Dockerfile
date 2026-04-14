@@ -35,10 +35,11 @@ COPY scripts/ ./scripts/
 
 RUN mkdir -p /app/data/uploads /app/data/faiss_index
 
+# Fix Windows CRLF line endings that break bash on Linux
+RUN sed -i 's/\r$//' /app/scripts/start.sh && chmod +x /app/scripts/start.sh
+
 RUN useradd -m -u 1000 appuser && \
     chown -R appuser:appuser /app
-
-RUN chmod +x /app/scripts/start.sh
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
   CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
