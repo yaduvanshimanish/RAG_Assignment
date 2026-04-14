@@ -37,8 +37,11 @@ def upload_document(file_bytes: bytes, filename: str, content_type: str) -> dict
             timeout=UPLOAD_TIMEOUT_SECONDS
         )
         if response.status_code not in (200, 201):
-            r_json = response.json()
-            error_msg = r_json.get("detail", "Upload failed") if isinstance(r_json, dict) else str(r_json)
+            try:
+                r_json = response.json()
+                error_msg = r_json.get("detail", "Upload failed") if isinstance(r_json, dict) else str(r_json)
+            except Exception:
+                error_msg = f"HTTP {response.status_code}: {response.text[:100]}"
             return {"error": error_msg}
         return response.json()
     except Exception as e:

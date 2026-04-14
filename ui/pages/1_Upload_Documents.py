@@ -26,8 +26,10 @@ with st.form("upload_form"):
 if submit_button:
     if uploaded_file is not None:
         st.info("Uploading and processing your document. This may take a minute...")
+        uploaded_file.seek(0)
+        file_bytes = uploaded_file.read()
         response = api_client.upload_document(
-            uploaded_file.read(),
+            file_bytes,
             uploaded_file.name,
             uploaded_file.type
         )
