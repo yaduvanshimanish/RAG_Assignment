@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-backend:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install backend dependencies
+        run: pip install -r requirements.txt
+
+      - name: Set test environment variables
+        run: |
+          echo "GEMINI_API_KEY=test-key-placeholder" >> $GITHUB_ENV
+          echo "DATABASE_URL=sqlite:///./test_ci.db" >> $GITHUB_ENV
+          echo "FAISS_INDEX_PATH=./test_faiss" >> $GITHUB_ENV
+          echo "UPLOAD_DIR=./test_uploads" >> $GITHUB_ENV
+
+      - name: Run unit tests
+        run: pytest tests/test_document_processor.py tests/test_faiss_service.py -v
+
+      - name: Run integration tests
+        run: pytest tests/test_api_documents.py tests/test_api_query.py -v
+
+  test-ui-imports:
+    name: UI Import Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install UI dependencies
+        run: pip install -r ui/requirements.txt
+
+      - name: Check UI modules import correctly
+        run: |
+          cd ui
+          python -c "from components.api_client import get_health; print('api_client OK')"
+          python -c "from components.display_helpers import format_file_size; print('display_helpers OK')"
