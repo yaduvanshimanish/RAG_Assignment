@@ -1,0 +1,61 @@
+version: "3.9"
+
+services:
+  rag-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: rag-pipeline-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.0-flash}
+      - GEMINI_EMBEDDING_MODEL=${GEMINI_EMBEDDING_MODEL:-models/text-embedding-004}
+      - DATABASE_URL=${DATABASE_URL:-sqlite:///./data/rag_metadata.db}
+      - FAISS_INDEX_PATH=${FAISS_INDEX_PATH:-./data/faiss_index}
+      - UPLOAD_DIR=${UPLOAD_DIR:-./data/uploads}
+      - FAISS_DIMENSION=${FAISS_DIMENSION:-768}
+      - CHUNK_SIZE=${CHUNK_SIZE:-500}
+      - CHUNK_OVERLAP=${CHUNK_OVERLAP:-50}
+      - MAX_DOCUMENTS=${MAX_DOCUMENTS:-20}
+      - MAX_PAGES_PER_DOC=${MAX_PAGES_PER_DOC:-1000}
+      - MAX_RETRIEVED_CHUNKS=${MAX_RETRIEVED_CHUNKS:-5}
+      - MAX_FILE_SIZE_MB=${MAX_FILE_SIZE_MB:-100}
+      - DEBUG=${DEBUG:-false}
+    volumes:
+      - rag-data:/app/data
+    networks:
+      - rag-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: rag-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      rag-api:
+        condition: service_healthy
+    networks:
+      - rag-network
+    profiles:
+      - "with-nginx"
+
+volumes:
+  rag-data:
+    driver: local
+
+networks:
+  rag-network:
+    driver: bridge
