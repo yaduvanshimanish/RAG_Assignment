@@ -1,0 +1,307 @@
+{
+  "info": {
+    "name": "RAG Pipeline API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000"
+    },
+    {
+      "key": "doc_id",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Root Endpoint",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/",
+              "host": ["{{base_url}}"],
+              "path": [""]
+            },
+            "description": "Get API root information"
+          }
+        },
+        {
+          "name": "Health Check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Status is healthy\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('status');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            },
+            "description": "Check API health and vector store stats"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Documents",
+      "item": [
+        {
+          "name": "Upload Document",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set(\"doc_id\", jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/api/v1/documents/upload",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "documents", "upload"]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "description": "Upload a new document for processing"
+          }
+        },
+        {
+          "name": "List Documents",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Has total field\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('total');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/documents/?skip=0&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "documents", ""],
+              "query": [
+                { "key": "skip", "value": "0" },
+                { "key": "limit", "value": "20" },
+                { "key": "status", "value": "ready", "disabled": true }
+              ]
+            },
+            "description": "List uploaded documents"
+          }
+        },
+        {
+          "name": "Get Document",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Matches doc_id\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var expectedId = pm.collectionVariables.get(\"doc_id\");",
+                  "    pm.expect(jsonData.id.toString()).to.eql(expectedId.toString());",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/documents/{{doc_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "documents", "{{doc_id}}"]
+            },
+            "description": "Get metadata for a specific document"
+          }
+        },
+        {
+          "name": "Get Document Chunks",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/documents/{{doc_id}}/chunks?skip=0&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "documents", "{{doc_id}}", "chunks"],
+              "query": [
+                { "key": "skip", "value": "0" },
+                { "key": "limit", "value": "10" }
+              ]
+            },
+            "description": "Get text chunks for a document"
+          }
+        },
+        {
+          "name": "Delete Document",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/v1/documents/{{doc_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "documents", "{{doc_id}}"]
+            },
+            "description": "Delete a document"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Query",
+      "item": [
+        {
+          "name": "RAG Query",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Answer is string\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.answer).to.be.a('string');",
+                  "    pm.expect(jsonData.retrieved_chunks).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/api/v1/query/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "query", ""]
+            },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"query\": \"What is the main topic?\", \"top_k\": 5}"
+            },
+            "description": "Query the vector database and generate an answer"
+          }
+        },
+        {
+          "name": "RAG Query (Filtered)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/api/v1/query/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "query", ""]
+            },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"query\": \"Summarize key findings.\", \"top_k\": 3, \"document_ids\": [{{doc_id}}]}"
+            },
+            "description": "Query specific documents only"
+          }
+        },
+        {
+          "name": "Query History",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response is array\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/query/history?skip=0&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "query", "history"],
+              "query": [
+                { "key": "skip", "value": "0" },
+                { "key": "limit", "value": "10" }
+              ]
+            },
+            "description": "View past queries"
+          }
+        }
+      ]
+    }
+  ]
+}
