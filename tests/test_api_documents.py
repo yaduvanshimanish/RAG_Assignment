@@ -80,7 +80,7 @@ def test_root_endpoint(client):
 def test_upload_unsupported_extension(client):
     """POST /api/v1/documents/upload with file test.exe. Expect 400."""
     file_content = b"dummy"
-    files = {"file": ("test.exe", file_content, "application/octet-stream")}
+    files = [("files", ("test.exe", file_content, "application/octet-stream"))]
     response = client.post("/api/v1/documents/upload", files=files)
     assert response.status_code == 400
     assert "Unsupported" in response.json()["detail"]
@@ -88,13 +88,15 @@ def test_upload_unsupported_extension(client):
 def test_upload_txt_success(client, mock_faiss, mock_embeddings):
     """Mock embeddings and faiss. POST upload. Expect 201."""
     text_content = b"word " * 300
-    files = {"file": ("test.txt", text_content, "text/plain")}
+    files = [("files", ("test.txt", text_content, "text/plain"))]
     response = client.post("/api/v1/documents/upload", files=files)
     
     assert response.status_code == 201
     data = response.json()
-    assert data["original_filename"] == "test.txt"
-    assert data["status"] in ["ready", "failed"]
+    assert isinstance(data, list)
+    assert len(data) == 1
+    assert data[0]["original_filename"] == "test.txt"
+    assert data[0]["status"] in ["ready", "failed"]
 
 def test_list_documents_empty(client):
     """GET /api/v1/documents/. Expect 200. Response has total and documents keys."""
