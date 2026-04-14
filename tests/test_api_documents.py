@@ -99,8 +99,8 @@ def test_upload_txt_success(client, mock_faiss, mock_embeddings):
     assert data[0]["status"] in ["ready", "failed"]
 
 def test_list_documents_empty(client):
-    """GET /api/v1/documents/. Expect 200. Response has total and documents keys."""
-    response = client.get("/api/v1/documents/")
+    """GET /api/v1/documents. Expect 200. Response has total and documents keys."""
+    response = client.get("/api/v1/documents")
     assert response.status_code == 200
     data = response.json()
     assert "total" in data
@@ -108,8 +108,8 @@ def test_list_documents_empty(client):
     assert isinstance(data["documents"], list)
 
 def test_list_documents_with_status_filter(client):
-    """GET /api/v1/documents/?status=ready. Expect 200."""
-    response = client.get("/api/v1/documents/?status=ready")
+    """GET /api/v1/documents?status=ready. Expect 200."""
+    response = client.get("/api/v1/documents?status=ready")
     assert response.status_code == 200
 
 def test_get_document_not_found(client):

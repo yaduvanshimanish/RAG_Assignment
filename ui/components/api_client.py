@@ -9,11 +9,13 @@ import streamlit as st
 from typing import List, Dict, Any, Optional
 
 try:
-    import streamlit as st
     # Streamlit Community Cloud injects secrets via st.secrets
-    API_BASE_URL = st.secrets.get("API_BASE_URL", os.getenv("API_BASE_URL", "http://localhost:8000"))
+    _base_url = st.secrets.get("API_BASE_URL", os.getenv("API_BASE_URL", "http://localhost:8000"))
 except Exception:
-    API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
+    _base_url = os.getenv("API_BASE_URL", "http://localhost:8000")
+
+# Sanitize: strip whitespace and trailing slashes to prevent double-slash 404 errors
+API_BASE_URL = _base_url.strip().rstrip("/")
 REQUEST_TIMEOUT_SECONDS = 60
 UPLOAD_TIMEOUT_SECONDS = 300
 
@@ -23,7 +25,7 @@ def get_health() -> dict:
         response.raise_for_status()
         return response.json()
     except Exception as e:
-        return {"error": "Cannot connect to backend. Check API_BASE_URL."}
+        return {"error": f"Cannot connect to backend at {API_BASE_URL}. Details: {e}"}
 
 def upload_document(file_bytes: bytes, filename: str, content_type: str) -> dict:
     try:
@@ -47,7 +49,7 @@ def list_documents(skip: int = 0, limit: int = 100, status_filter: str = None) -
         if status_filter:
             params["status"] = status_filter
         response = requests.get(
-            f"{API_BASE_URL}/api/v1/documents/",
+            f"{API_BASE_URL}/api/v1/documents",
             params=params,
             timeout=REQUEST_TIMEOUT_SECONDS
         )
@@ -96,7 +98,7 @@ def query_documents(query_text: str, top_k: int = 5, document_ids: list = None) 
         if document_ids is not None and len(document_ids) > 0:
             payload["document_ids"] = document_ids
         response = requests.post(
-            f"{API_BASE_URL}/api/v1/query/",
+            f"{API_BASE_URL}/api/v1/query",
             json=payload,
             timeout=REQUEST_TIMEOUT_SECONDS
         )

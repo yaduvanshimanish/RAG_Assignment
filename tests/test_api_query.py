@@ -60,28 +60,28 @@ def mock_gemini(monkeypatch):
 
 def test_query_empty_body(client):
     """POST /api/v1/query/ with {}. Expect 422."""
-    response = client.post("/api/v1/query/", json={})
+    response = client.post("/api/v1/query", json={})
     assert response.status_code == 422
 
 def test_query_empty_string(client):
     """POST /api/v1/query/ with empty query. Expect 422."""
-    response = client.post("/api/v1/query/", json={"query": "", "top_k": 3})
+    response = client.post("/api/v1/query", json={"query": "", "top_k": 3})
     assert response.status_code == 422
 
 def test_query_no_documents(client):
     """POST /api/v1/query/ with valid query when no documents exist."""
-    response = client.post("/api/v1/query/", json={"query": "test query"})
+    response = client.post("/api/v1/query", json={"query": "test query"})
     assert response.status_code == 400
     assert "No documents" in response.json()["detail"]
 
 def test_query_invalid_top_k_zero(client):
     """POST /api/v1/query/ with top_k=0. Expect 422."""
-    response = client.post("/api/v1/query/", json={"query": "test", "top_k": 0})
+    response = client.post("/api/v1/query", json={"query": "test", "top_k": 0})
     assert response.status_code == 422
 
 def test_query_invalid_top_k_too_large(client):
     """POST /api/v1/query/ with top_k=100. Expect 422."""
-    response = client.post("/api/v1/query/", json={"query": "test", "top_k": 100})
+    response = client.post("/api/v1/query", json={"query": "test", "top_k": 100})
     assert response.status_code == 422
 
 def test_query_history_empty(client):
@@ -109,5 +109,5 @@ def test_query_nonexistent_document_ids(client, mock_faiss, mock_gemini):
     except StopIteration:
         pass
         
-    response = client.post("/api/v1/query/", json={"query": "test", "document_ids": [99999]})
+    response = client.post("/api/v1/query", json={"query": "test", "document_ids": [99999]})
     assert response.status_code == 404

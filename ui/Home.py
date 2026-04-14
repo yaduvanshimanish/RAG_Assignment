@@ -60,35 +60,37 @@ try:
 except Exception as e:
     health_res = {"error": str(e)}
 
-if "error" in health_res:
-    st.error(f"Backend unavailable: {health_res['error']}")
-    st.info("Steps to fix: check that the API is running and API_BASE_URL is correct.")
-else:
-    # Use terminal style display for health
-    docs_count = health_res.get("documents_count", 0)
-    chunks_count = health_res.get("chunks_count", 0) # Assuming the health endpoint might return these, if not we will just use placeholders or make a separate call.
-    # Actually, the health response returns status. We can also call list_documents.
-    
+# Determine status dynamically based on health check result
+is_online = "error" not in health_res
+total_documents = 0
+
+if is_online:
     docs_res = api_client.list_documents(limit=1)
     if "error" not in docs_res:
         total_documents = docs_res.get("total", 0)
-    else:
-        total_documents = 0
-        
-    term_html = f"""
-    <div class="terminal-card">
-        <div>[SYS] Connection Established to Backend Node.</div>
-        <div>[SYS] Status: ONLINE</div>
-        <div>[SYS] API Address: {api_client.API_BASE_URL}</div>
-        <div>[DB] Indexed Documents: {total_documents}</div>
-        <div>[DB] FAISS Vector Store: READY</div>
-        <div style="margin-top:10px; color:#10b981;">>>> All systems operating within standard parameters.</div>
-    </div>
-    """
-    st.markdown(term_html, unsafe_allow_html=True)
-    
+
+status_text = "ONLINE" if is_online else "OFFLINE"
+status_color = "#10b981" if is_online else "#ef4444"
+connection_msg = "[SYS] Connection Established to Backend Node." if is_online else "[ERR] Connection Failed to Backend Node."
+
+term_html = f"""
+<div class="terminal-card">
+    <div>{connection_msg}</div>
+    <div>[SYS] Status: <span style="color:{status_color}; text-shadow: 0 0 5px {status_color}; font-weight: bold;">{status_text}</span></div>
+    <div>[SYS] API Address: {api_client.API_BASE_URL}</div>
+    <div>[DB] Indexed Documents: {total_documents}</div>
+    <div>[DB] FAISS Vector Store: {"READY" if is_online else "UNAVAILABLE"}</div>
+    <div style="margin-top:10px; color:{status_color};">>>> {"All systems operating within standard parameters." if is_online else "CRITICAL: Backend node unreachable. Verify API_BASE_URL in secrets."}</div>
+</div>
+"""
+st.markdown(term_html, unsafe_allow_html=True)
+
+if is_online:
     st.markdown("<br>", unsafe_allow_html=True)
-    display_helpers.render_metric_row(total_documents, -1, "Online") # -1 as placeholder for chunks since we don't have total chunks globally tracked easily without full fetch
+    display_helpers.render_metric_row(total_documents, -1, "Online")
+else:
+    st.error(f"Backend unavailable: {health_res.get('error', 'Unknown error')}")
+    st.info("Verify that the backend is running and that the API_BASE_URL secret is set correctly in Streamlit Cloud settings.")
 
 st.markdown("<hr class='hr-tech'>", unsafe_allow_html=True)
 st.subheader("Operation Protocols")

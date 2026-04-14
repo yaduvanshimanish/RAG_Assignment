@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/query", tags=["Query"])
 
-@router.post("/", response_model=QueryResponse)
+@router.post("", response_model=QueryResponse)
 def query_documents(request: QueryRequest, db: Session = Depends(get_db)):
     start_time = time.time()
     

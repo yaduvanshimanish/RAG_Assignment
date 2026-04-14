@@ -126,7 +126,7 @@ def upload_documents(files: List[UploadFile] = File(...), db: Session = Depends(
         
     return results
 
-@router.get("/", response_model=DocumentListResponse)
+@router.get("", response_model=DocumentListResponse)
 def list_documents(skip: int = 0, limit: int = 20, status: Optional[str] = Query(None), db: Session = Depends(get_db)):
     query = db.query(Document)
     if status is not None:
