@@ -3,9 +3,9 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     GEMINI_API_KEY: str = ""
-    GEMINI_MODEL: str = "gemini-2.0-flash"
-    GEMINI_EMBEDDING_MODEL: str = "models/text-embedding-004"
-    FAISS_DIMENSION: int = 768
+    GEMINI_MODEL: str = "gemini-2.5-flash-lite"
+    GEMINI_EMBEDDING_MODEL: str = "gemini-embedding-001"
+    FAISS_DIMENSION: int = 3072
     FAISS_INDEX_PATH: str = "./data/faiss_index"
     MAX_DOCUMENTS: int = 20
     MAX_PAGES_PER_DOC: int = 1000

@@ -16,8 +16,8 @@ Client -> FastAPI -> Services
 | Component       | Technology                    |
 |-----------------|-------------------------------|
 | Web Framework   | FastAPI 0.115                 |
-| LLM             | Google Gemini Flash 2.0       |
-| Embeddings      | Google text-embedding-004     |
+| LLM             | Google Gemini 2.5 Flash Lite    |
+| Embeddings      | Google gemini-embedding-001   |
 | Vector Search   | FAISS (IndexFlatIP, cosine)   |
 | Metadata DB     | SQLite (SQLAlchemy ORM)       |
 | Containerization| Docker + Docker Compose       |
@@ -148,9 +148,9 @@ pytest tests/test_faiss_service.py -v
 | Environment Variable   | Default Value                    | Description                                  |
 |------------------------|----------------------------------|----------------------------------------------|
 | GEMINI_API_KEY         | your_gemini_api_key_here         | Google Gemini API key                        |
-| GEMINI_MODEL           | gemini-2.0-flash                 | LLM Model to generate answers                |
-| GEMINI_EMBEDDING_MODEL | models/text-embedding-004        | Embedding model used                         |
-| FAISS_DIMENSION        | 768                              | Vector dimensions                            |
+| GEMINI_MODEL           | gemini-2.5-flash-lite            | LLM Model to generate answers                |
+| GEMINI_EMBEDDING_MODEL | gemini-embedding-001             | Embedding model used                         |
+| FAISS_DIMENSION        | 3072                             | Vector dimensions                            |
 | FAISS_INDEX_PATH       | ./data/faiss_index               | Path to store FAISS index on disk            |
 | MAX_DOCUMENTS          | 20                               | Maximum number of documents allowed          |
 | MAX_PAGES_PER_DOC      | 1000                             | Document page parsing limit                  |
