@@ -8,7 +8,12 @@ import requests
 import streamlit as st
 from typing import List, Dict, Any, Optional
 
-API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
+try:
+    import streamlit as st
+    # Streamlit Community Cloud injects secrets via st.secrets
+    API_BASE_URL = st.secrets.get("API_BASE_URL", os.getenv("API_BASE_URL", "http://localhost:8000"))
+except Exception:
+    API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 REQUEST_TIMEOUT_SECONDS = 60
 UPLOAD_TIMEOUT_SECONDS = 300
 
