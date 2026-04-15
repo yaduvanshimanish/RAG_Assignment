@@ -1,258 +1,165 @@
-# RAG Pipeline - Retrieval-Augmented Generation with FastAPI, Gemini Flash, and FAISS
+# 🚀 RAG Pipeline: Enterprise-Grade Document Intelligence
 
 ![CI](https://github.com/yaduvanshimanish/RAG_Assignment/actions/workflows/ci.yml/badge.svg)
-A production-ready Retrieval-Augmented Generation (RAG) pipeline REST API using FastAPI.
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![Gemini](https://img.shields.io/badge/LLM-Gemini--2.5--Flash-blue?style=flat)](https://aistudio.google.com/)
+[![Docker](https://img.shields.io/badge/Container-Docker-2496ED?style=flat&logo=docker)](https://www.docker.com/)
 
-## Architecture Overview
+A production-ready **Retrieval-Augmented Generation (RAG)** pipeline designed for high-performance document interrogation. Powered by **FastAPI**, **Google Gemini**, and **FAISS**.
 
-Client -> FastAPI -> Services
-                 |-> document_processor (Text extraction and chunking)
-                 |-> gemini_service (Embeddings and LLM Generation)
-                 |-> faiss_service (Vector search)
-                 |-> SQLite (Database and metadata)
-                 |-> FAISS (Vector store)
+---
 
-## Tech Stack
+## ✨ Key Features
 
-| Component       | Technology                    |
-|-----------------|-------------------------------|
-| Web Framework   | FastAPI 0.115                 |
-| LLM             | Google Gemini 2.5 Flash Lite    |
-| Embeddings      | Google gemini-embedding-001   |
-| Vector Search   | FAISS (IndexFlatIP, cosine)   |
-| Metadata DB     | SQLite (SQLAlchemy ORM)       |
-| Containerization| Docker + Docker Compose       |
+- **🧠 Multi-Modal Extraction**: Intelligent OCR fallback using Gemini Vision for scanned PDFs and images.
+- **⚡ High-Speed Retrieval**: FAISS-powered vector search with L2-normalized cosine similarity.
+- **🛡️ Production Ready**: Rate-limiting Nginx proxy, Docker orchestration, and persistent metadata storage.
+- **📄 Multi-Format Support**: ingest PDF, DOCX, TXT, MD, JPG, and PNG.
+- **🧪 Rigorous Quality**: Full unit and integration test coverage with GitHub Actions CI.
 
-## Prerequisites
+---
 
-- Python 3.11+
-- Docker
-- Docker Compose
-- Gemini API key. Get a free key at https://aistudio.google.com/app/apikey
-- `poppler-utils` (Optional, required for OCR fallback on scanned PDFs)
+## 🏗️ System Architecture
 
-## Local Setup (Python)
+The pipeline is built on a decoupled modular architecture, ensuring scalability and ease of maintenance.
 
-1. Clone the repository and navigate into it:
-   ```bash
-   git clone <repository_url>
-   cd rag-pipeline
-   ```
-2. Create and activate a virtual environment:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-   *Note: If you want OCR support for scanned PDFs, make sure `poppler-utils` is installed on your system (`sudo apt-get install poppler-utils` on Ubuntu/Debian or `brew install poppler` on macOS).*
-4. Configure environment variables:
-   ```bash
-   cp .env.example .env
-   ```
-   Edit `.env` and insert your GEMINI_API_KEY.
-5. Run the application:
-   ```bash
-   uvicorn app.main:app --reload
-   ```
-
-## Docker Setup
-
-Configure environment variables:
-```bash
-cp .env.example .env
-```
-Edit `.env` to add your GEMINI_API_KEY.
-
-Start the application:
-```bash
-docker compose up --build -d
-```
-Check running containers:
-```bash
-docker compose ps
-```
-View logs:
-```bash
-docker compose logs -f rag-api
-```
-Stop the application:
-```bash
-docker compose down
+```mermaid
+graph TD
+    User([User / Client]) --> |REST API| API[FastAPI Gateway]
+    
+    subgraph "Ingestion Flow"
+        API --> DP[Document Processor]
+        DP --> |OCR Fallback| GS_OCR[Gemini Multi-modal SDK]
+        DP --> |Vectorization| VS[FAISS Vector Store]
+        DP --> |Metadata| DB[(SQLite DB)]
+    end
+    
+    subgraph "Query Flow"
+        API --> RS[Retrieval Service]
+        RS --> |Retrieve| VS
+        VS --> |Context| RS
+        RS --> |Augment| GS_LLM[Gemini 2.5 Flash]
+        GS_LLM --> |Answer| API
+    end
 ```
 
-With Nginx rate-limiting proxy:
+---
+
+## 🚀 Quick Start
+
+### 🐳 Using Docker (Recommended)
+
+1.  **Configure Environment**:
+    ```bash
+    cp .env.example .env
+    # Add your GEMINI_API_KEY to .env
+    ```
+2.  **Launch Stack**:
+    ```bash
+    docker compose up --build -d
+    ```
+3.  **Access Services**:
+    - **Backend API**: [http://localhost:8000](http://localhost:8000)
+    - **Interactive UI**: [http://localhost:8501](http://localhost:8501)
+
+<details>
+<summary><b>🔍 View Advanced Docker Options</b></summary>
+
+- **View Logs**: `docker compose logs -f rag-api`
+- **Nginx Proxy Mode**: `docker compose --profile with-nginx up --build -d`
+- **Stop Stack**: `docker compose down`
+
+</details>
+
+---
+
+## ⛓️ Technical Stack
+
+| Layer | Technology |
+| :--- | :--- |
+| **API Framework** | FastAPI 0.115 |
+| **LLM Engine** | Google Gemini 2.5 Flash Lite |
+| **Embeddings** | Google `gemini-embedding-001` |
+| **Vector DB** | FAISS (IndexFlatIP) |
+| **Metadata** | SQLite (SQLAlchemy ORM) |
+| **UI** | Streamlit |
+
+---
+
+## 🔌 API Reference
+
+### 📂 Document Management
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/api/v1/documents/upload` | Ingest new document (PDF, DOCX, etc.) |
+| `GET` | `/api/v1/documents/` | List all processed documents |
+| `GET` | `/api/v1/documents/{id}` | Retrieve document metadata |
+| `DELETE` | `/api/v1/documents/{id}` | Purge document from system |
+
+### 💬 Intelligence & Query
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/api/v1/query/` | Perform a grounded RAG query |
+| `GET` | `/api/v1/query/history` | Audit past query-answer pairs |
+
+<details>
+<summary><b>💻 Example Usage (curl)</b></summary>
+
+**Upload Document**:
 ```bash
-docker compose --profile with-nginx up --build -d
+curl -X POST http://localhost:8000/api/v1/documents/upload -F "file=@demo.pdf"
 ```
 
-## Cloud Deployment (AWS / GCP / Azure)
-
-1. Provision a VM (Ubuntu 22.04 recommended).
-2. Install Docker and Docker Compose.
-3. Clone the repository to the VM.
-4. Configure the `.env` file with your API keys.
-5. Run `docker compose up --build -d`
-6. Open port 8000 in your security group / firewall rules to allow external access.
-
-## API Reference
-
-| Method | Path                              | Description                    |
-|--------|-----------------------------------|--------------------------------|
-| GET    | /                                 | Root info                      |
-| GET    | /health                           | Health check                   |
-| POST   | /api/v1/documents/upload          | Upload document                |
-| GET    | /api/v1/documents/                | List documents                 |
-| GET    | /api/v1/documents/{id}            | Get document metadata          |
-| GET    | /api/v1/documents/{id}/chunks     | Get document chunks            |
-| DELETE | /api/v1/documents/{id}            | Delete document                |
-| POST   | /api/v1/query/                    | RAG query                      |
-| GET    | /api/v1/query/history             | Query history                  |
-
-## Example curl Commands
-
-Upload a document:
-```bash
-curl -X POST http://localhost:8000/api/v1/documents/upload -F "file=@/path/to/doc.pdf"
-```
-
-Perform a query:
+**Execute Query**:
 ```bash
 curl -X POST http://localhost:8000/api/v1/query/ \
      -H "Content-Type: application/json" \
-     -d '{"query": "What is the main topic?", "top_k": 5}'
+     -d '{"query": "Summarize the key findings", "top_k": 5}'
 ```
 
-List documents:
-```bash
-curl http://localhost:8000/api/v1/documents/
-```
+</details>
 
-## Running Tests
+---
 
-Install required dependencies:
-```bash
-pip install -r requirements.txt
-```
-Run all tests:
+## ⚙️ Configuration
+
+| Variable | Default | Description |
+| :--- | :--- | :--- |
+| `GEMINI_API_KEY` | `Required` | API Key from Google AI Studio |
+| `MAX_DOCUMENTS` | `20` | Max document limit per system |
+| `MAX_PAGES_PER_DOC`| `1000` | Hard cap on document size |
+| `FAISS_INDEX_PATH` | `./data/faiss` | Persistence directory for vector index |
+
+---
+
+## 🧪 Development & Testing
+
+### Local Setup
+1.  **Install dependencies**: `pip install -r requirements.txt`
+2.  **OCR Support**: Install `poppler-utils` (`apt-get install poppler-utils` / `brew install poppler`).
+3.  **Run Server**: `uvicorn app.main:app --reload`
+
+### Running Tests
 ```bash
 pytest
-```
-Run specific test files:
-```bash
-pytest tests/test_document_processor.py -v
 pytest tests/test_faiss_service.py -v
 ```
 
-## Configuration Reference
+---
 
-| Environment Variable   | Default Value                    | Description                                  |
-|------------------------|----------------------------------|----------------------------------------------|
-| GEMINI_API_KEY         | your_gemini_api_key_here         | Google Gemini API key                        |
-| GEMINI_MODEL           | gemini-2.5-flash-lite            | LLM Model to generate answers                |
-| GEMINI_EMBEDDING_MODEL | gemini-embedding-001             | Embedding model used                         |
-| FAISS_DIMENSION        | 3072                             | Vector dimensions                            |
-| FAISS_INDEX_PATH       | ./data/faiss_index               | Path to store FAISS index on disk            |
-| MAX_DOCUMENTS          | 20                               | Maximum number of documents allowed          |
-| MAX_PAGES_PER_DOC      | 1000                             | Document page parsing limit                  |
-| CHUNK_SIZE             | 500                              | Text chunk size in words                     |
-| CHUNK_OVERLAP          | 50                               | Overlap between text chunks                  |
-| MAX_RETRIEVED_CHUNKS   | 5                                | Default top_k context limit                  |
-| MAX_FILE_SIZE_MB       | 100                              | Maximum allowed upload file size (MB)        |
-| DATABASE_URL           | sqlite:///./data/rag_metadata.db | Database connection URI                      |
-| UPLOAD_DIR             | ./data/uploads                   | Path to store uploaded files                 |
-| DEBUG                  | false                            | Enable debug mode                            |
-
-## Supported File Types
-
-PDF, DOCX, DOC, TXT, MD, JPG, PNG
-
-## Limitations
-
-- Max 20 documents
-- Max 1000 pages per document
-- Max 100MB per file
-- FAISS is in-memory + persisted locally (not distributed)
-
-## License
-
-MIT
-
-## Streamlit UI
-
-### Running the Streamlit UI locally
-
-Prerequisites: Backend must be running at http://localhost:8000
-
-```bash
-cd ui
-pip install -r requirements.txt
-API_BASE_URL=http://localhost:8000 streamlit run Home.py
-```
-
-Open http://localhost:8501 in your browser.
-
-Pages available:
-| Page               | URL path      | Description                              |
-|--------------------|---------------|------------------------------------------|
-| Home               | /             | Backend health status and navigation     |
-| Upload Documents   | /Upload       | Upload and process PDF, DOCX, TXT files  |
-| Ask Questions      | /Ask          | RAG query interface with chunk viewer    |
-| Document Library   | /Library      | Browse, inspect, and delete documents    |
-| Query History      | /History      | View past queries and AI answers         |
-
-## Running Full Stack with Docker Compose
-
-```bash
-cp .env.example .env
-# Set GEMINI_API_KEY in .env
-docker compose up --build -d
-```
-
-Services started:
-| Service     | URL                    | Description          |
-|-------------|------------------------|----------------------|
-| rag-api     | http://localhost:8000  | FastAPI backend      |
-| rag-ui      | http://localhost:8501  | Streamlit frontend   |
-
-## Global Deployment
+## 🌩️ Global Deployment
 
 ### Backend (Railway)
+1.  Initialize project: `railway init`
+2.  Deploy stack: `railway up`
+3.  Mount a persistent Volume at `/app/data` to preserve index and documents.
 
-1. Install Railway CLI and login:
-   ```bash
-   npm install -g @railway/cli
-   railway login
-   ```
-2. Initialize and deploy:
-   ```bash
-   railway init
-   railway up
-   ```
-3. Set environment variables in the Railway dashboard (Variables tab):
-   `GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_EMBEDDING_MODEL`, 
-   `FAISS_DIMENSION`, `FAISS_INDEX_PATH`, `UPLOAD_DIR`, `DATABASE_URL`, etc.
-4. Add a persistent Volume in Railway (mount at `/app/data`) to preserve uploaded documents and the FAISS index across redeploys.
-5. Get public URL: `railway domain`
+### Frontend (Streamlit Cloud)
+1.  Connect GitHub to [Streamlit Cloud](https://share.streamlit.io).
+2.  Set `API_BASE_URL` in **Advanced Settings -> Secrets**.
+3.  Deploy `ui/Home.py`.
 
-### Frontend (Streamlit Community Cloud)
+---
 
-1. Go to https://share.streamlit.io
-2. Connect your GitHub account.
-3. New app -> Repository: your-username/rag-pipeline -> Main file: ui/Home.py
-4. In Advanced settings -> Secrets, add:
-   ```toml
-   API_BASE_URL = "https://your-railway-url.up.railway.app"
-   ```
-5. Click Deploy.
-
-Full deployment detail in `STREAMLIT_DEPLOY.md` and `.railway/DEPLOYMENT_NOTES.md`
-
-## CI/CD
-
-GitHub Actions runs on every push to main:
-- Backend unit tests (document processor, FAISS service)
-- Backend integration tests (documents API, query API)
-- UI import validation
+## 📜 License
+Published under the **MIT License**. Created for the **LLM Intern Assignment**.
